@@ -1,13 +1,6 @@
 import { API_KEY, MAX_RESULTS } from "@/constants/app.constant";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
-// interface SearchInput {
-//   searchString?: string;
-//   searchIn?: string;
-//   page?: number;
-//   pageSize?: number;
-// }
-
 export interface VolumeItems {
   id: string;
   selfLink: string;

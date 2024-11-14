@@ -1,12 +1,15 @@
 import { useState } from "react";
 import "./App.css";
 import { Loader } from "./components/loader";
-import { useGetVolumes } from "./queries/useGetVolumes";
+import { useGetVolumes, VolumeItems } from "./queries/useGetVolumes";
 import { Button } from "./components/ui/button";
 import { BookCard } from "./components/book-card";
+import { DetailsDialog } from "./components/details-dialog";
 
 function App() {
   const [searchString] = useState<string>("Programming");
+  const [selectedBook, setSelectedBook] = useState<VolumeItems | null>(null);
+  const [open, setOpen] = useState<boolean>(false);
   const { data, isLoading, fetchNextPage } = useGetVolumes(searchString);
 
   const books = data?.pages?.flatMap((page) => page.items) ?? [];
@@ -20,7 +23,14 @@ function App() {
               <h1 className="text-4xl font-bold mb-16 text-center">Books</h1>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {books.map((book, index) => (
-                  <BookCard key={book.id + index} book={book} />
+                  <BookCard
+                    key={book.id + index}
+                    book={book}
+                    openModal={() => {
+                      setSelectedBook(book);
+                      setOpen(true);
+                    }}
+                  />
                 ))}
               </div>
             </div>
@@ -30,6 +40,11 @@ function App() {
           </Button>
         </>
       )}
+      <DetailsDialog
+        open={open}
+        setOpen={setOpen}
+        selectedBook={selectedBook}
+      />
     </>
   );
 }

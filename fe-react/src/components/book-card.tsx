@@ -10,10 +10,11 @@ import {
   CardFooter,
 } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 
-export const BookCard: FC<PropsWithChildren<{ book: VolumeItems }>> = ({
-  book,
-}) => {
+export const BookCard: FC<
+  PropsWithChildren<{ book: VolumeItems; openModal: () => void }>
+> = ({ book, openModal }) => {
   return (
     <Card className="flex flex-col overflow-hidden hover:shadow-2xl transition-shadow duration-300">
       <div className="flex h-64 w-full justify-center p-4">
@@ -32,7 +33,10 @@ export const BookCard: FC<PropsWithChildren<{ book: VolumeItems }>> = ({
               {book.volumeInfo.title}
             </CardTitle>
             <CardDescription className="text-sm ">
-              by {book.volumeInfo.authors?.join(", ")}
+              by{" "}
+              <span className="font-semibold">
+                {book.volumeInfo.authors?.join(", ")}
+              </span>
             </CardDescription>
           </div>
         </div>
@@ -56,9 +60,7 @@ export const BookCard: FC<PropsWithChildren<{ book: VolumeItems }>> = ({
         </div>
       </CardContent>
       <CardFooter className="flex justify-end bg-gray-50">
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-          Read More
-        </button>
+        <Button onClick={() => openModal()}>Read More</Button>
       </CardFooter>
     </Card>
   );
