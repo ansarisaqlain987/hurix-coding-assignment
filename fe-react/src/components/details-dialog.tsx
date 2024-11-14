@@ -8,6 +8,7 @@ import {
 } from "./ui/dialog";
 import { Badge } from "./ui/badge";
 import { BookOpen, Star } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Props {
   open: boolean;
@@ -47,8 +48,10 @@ export const DetailsDialog = ({ open, setOpen, selectedBook }: Props) => {
               </div>
             </div>
             <div className="my-4">
-              <p className="text-gray-700 text-justify">
-                {selectedBook?.volumeInfo.description}
+              <p className=" text-justify">
+                <ScrollArea className="h-[200px] rounded-md">
+                  {selectedBook?.volumeInfo.description}
+                </ScrollArea>
               </p>
               <div className="flex items-center mt-4 text-sm text-gray-600">
                 <Star className="w-4 h-4 text-yellow-500 mr-1" />
