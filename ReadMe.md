@@ -15,3 +15,8 @@
 - Vite
 - Shadcn
 - Tanstack React Query
+
+### Deployment
+
+[Link to deployed frontend app](https://fe-hurix.websofmine.com)\
+The application is hosted on VPS attached to a domain.
