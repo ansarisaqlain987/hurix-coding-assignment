@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  pg-book-storet:
+    image: postgres:14
+    container_name: pg-book-store
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: S3cretPass
+      POSTGRES_DB: bookstore
+    volumes:
+      - postgres_data:/var/lib/postgresql/book-store-data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
