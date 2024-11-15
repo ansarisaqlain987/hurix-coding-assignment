@@ -14,7 +14,6 @@ export const placeOrder = async (c: Context) => {
   const body: { items: { bookId: string; quantity: number }[] } =
     await c.req.json();
 
-  console.log(body);
   if (!body || !body.items || body.items.length === 0) {
     return c.json({ error: "No items in order" }, 400);
   }
@@ -55,6 +54,12 @@ export const placeOrder = async (c: Context) => {
     });
   }
 
+  if (totalPrice > 120) {
+    return c.json(
+      { error: "Order exceeds maximum purchase limit of $120" },
+      400
+    );
+  }
   // Deduct stock
   for (const { bookId, quantity } of items) {
     const currentOrder = await db
@@ -80,6 +85,22 @@ export const placeOrder = async (c: Context) => {
   }
 
   return c.json({ items, totalPrice });
+};
+
+export const getOrders = async (c: Context) => {
+  const ordersList = await db
+    .select({
+      id: orders.id,
+      items: orderItems.id,
+      bookId: orderItems.bookId,
+      quantity: orderItems.quantity,
+      price: orderItems.price,
+    })
+    .from(orders)
+    .leftJoin(orderItems, eq(orders.id, orderItems.orderId))
+    .where(eq(orders.userId, c.get("user")?.id));
+
+  return c.json(ordersList);
 };
 
 // Restock books
