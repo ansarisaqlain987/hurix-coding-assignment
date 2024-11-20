@@ -5,7 +5,11 @@ import {
   restockBooks,
   getOrders,
 } from "../controllers/bookController";
-import { authMiddleware, isAdmin } from "@/middlewares/middleware";
+import {
+  authMiddleware,
+  isAdmin,
+  validateRequestBody,
+} from "@/middlewares/middleware";
 
 const routes = new Hono();
 
@@ -15,8 +19,8 @@ routes.all("/", async (c) => {
   );
 });
 routes.get("/books", listBooks);
-routes.post("/order", authMiddleware, placeOrder);
+routes.post("/order", authMiddleware, validateRequestBody(), placeOrder);
 routes.get("/order", authMiddleware, getOrders);
-routes.post("/admin/restock", isAdmin, restockBooks);
+routes.post("/admin/restock", isAdmin, validateRequestBody(), restockBooks);
 
 export default routes;

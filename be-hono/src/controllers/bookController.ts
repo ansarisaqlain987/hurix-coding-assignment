@@ -1,15 +1,16 @@
 import { Context } from "hono";
-import { books, orderItems, orders } from "../db/schema";
-import { eq } from "drizzle-orm";
-import { db } from "@/db";
+import { getBooks, updateBooks } from "@/services/book.service";
+import {
+  getOrdersByUserId,
+  insertItems,
+  insertOrder,
+} from "@/services/order.service";
 
-// List all books
 export const listBooks = async (c: Context) => {
-  const allBooks = await db.select().from(books);
+  const allBooks = await getBooks();
   return c.json(allBooks);
 };
 
-// Place an order
 export const placeOrder = async (c: Context) => {
   const body: { items: { bookId: string; quantity: number }[] } =
     await c.req.json();
@@ -23,15 +24,15 @@ export const placeOrder = async (c: Context) => {
   let totalPrice = 0;
   let stock = 0;
 
-  const orderPayload: Record<string, any>[] = [];
+  const orderPayload: {
+    bookId: string;
+    quantity: number;
+    price: number;
+  }[] = [];
 
   // Validate and calculate total price
   for (const { bookId, quantity } of items) {
-    const bookList = await db
-      .select()
-      .from(books)
-      .where(eq(books.id, bookId))
-      .limit(1);
+    const bookList = await getBooks({ id: bookId });
     if (bookList.length === 0) {
       return c.json({ error: `Book with ID ${bookId} not found` }, 404);
     }
@@ -60,48 +61,26 @@ export const placeOrder = async (c: Context) => {
       400
     );
   }
-  // Deduct stock
+
+  const currentOrder = await insertOrder({
+    userId: c.get("user")?.id,
+  });
+  const orderId = currentOrder[0].id;
+  await insertItems(
+    orderPayload.map((item) => ({
+      orderId,
+      ...item,
+    }))
+  );
   for (const { bookId, quantity } of items) {
-    const currentOrder = await db
-      .insert(orders)
-      .values({
-        userId: c.get("user")?.id,
-      })
-      .returning({
-        id: orders.id,
-      });
-    await db.insert(orderItems).values(
-      orderPayload.map((item) => ({
-        orderId: currentOrder[0].id,
-        bookId: item.bookId,
-        quantity: item.quantity,
-        price: item.price,
-      }))
-    );
-    await db
-      .update(books)
-      .set({ stock: stock - quantity })
-      .where(eq(books.id, bookId));
+    await updateBooks({ stock: stock - quantity }, bookId);
   }
 
   return c.json({ items, totalPrice });
 };
 
 export const getOrders = async (c: Context) => {
-  const userOrders = await db
-    .select({
-      orderId: orders.id,
-      items: {
-        bookId: books.id,
-        bookTitle: books.title,
-        quantity: orderItems.quantity,
-        price: orderItems.price,
-      },
-    })
-    .from(orders)
-    .leftJoin(orderItems, eq(orders.id, orderItems.orderId))
-    .leftJoin(books, eq(orderItems.bookId, books.id))
-    .where(eq(orders.userId, c.get("user")?.id));
+  const userOrders = await getOrdersByUserId(c.get("user")?.id);
 
   const groupedOrders = userOrders.reduce(
     (acc: Record<string | number, any>, order) => {
@@ -120,20 +99,11 @@ export const getOrders = async (c: Context) => {
   return c.json(groupedOrders);
 };
 
-// Restock books
 export const restockBooks = async (c: Context) => {
-  const body = await c.req.text();
-  if (!body) {
-    return c.json({ error: "Invalid input" }, 400);
-  }
   const { bookId, quantity }: { bookId: string; quantity: number } =
     await c.req.json();
 
-  const bookList = await db
-    .select()
-    .from(books)
-    .where(eq(books.id, bookId))
-    .limit(1);
+  const bookList = await getBooks({ id: bookId });
   if (bookList.length === 0) {
     return c.json({ error: `Book with ID ${bookId} not found` }, 404);
   }
@@ -148,7 +118,7 @@ export const restockBooks = async (c: Context) => {
   }
 
   const newStock = Number(book.stock) + Number(quantity);
-  await db.update(books).set({ stock: newStock }).where(eq(books.id, bookId));
+  await updateBooks({ stock: newStock }, bookId);
   return c.json({
     message: `${book.title} restocked by ${quantity}`,
     newStock: newStock,
