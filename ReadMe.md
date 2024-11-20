@@ -41,5 +41,5 @@
 
 ### Deployments
 
-- [Link to Deployed Application](https://be-hono.websofmine.com/)
+- [Link to Deployed Application](https://be-hurix.websofmine.com)
 - The application is hosted on VPS attached to a domain.
