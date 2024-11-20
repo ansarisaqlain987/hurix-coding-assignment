@@ -41,5 +41,5 @@
 
 ### Deployments
 
-- link
-- where it is deployed
+- [Link to Deployed Application](https://be-hono.websofmine.com/)
+- The application is hosted on VPS attached to a domain.
