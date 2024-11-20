@@ -12,6 +12,6 @@ const bookRoutes = new Hono();
 bookRoutes.get("/books", listBooks);
 bookRoutes.post("/order", authMiddleware, placeOrder);
 bookRoutes.get("/order", authMiddleware, getOrders);
-bookRoutes.post("/admin/restock", authMiddleware, isAdmin, restockBooks);
+bookRoutes.post("/admin/restock", isAdmin, restockBooks);
 
 export default bookRoutes;

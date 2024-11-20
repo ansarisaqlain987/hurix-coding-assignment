@@ -88,34 +88,46 @@ export const placeOrder = async (c: Context) => {
 };
 
 export const getOrders = async (c: Context) => {
-  const ordersList = await db
+  const userOrders = await db
     .select({
-      id: orders.id,
-      items: orderItems.id,
-      bookId: orderItems.bookId,
-      quantity: orderItems.quantity,
-      price: orderItems.price,
+      orderId: orders.id,
+      items: {
+        bookId: books.id,
+        bookTitle: books.title,
+        quantity: orderItems.quantity,
+        price: orderItems.price,
+      },
     })
     .from(orders)
     .leftJoin(orderItems, eq(orders.id, orderItems.orderId))
+    .leftJoin(books, eq(orderItems.bookId, books.id))
     .where(eq(orders.userId, c.get("user")?.id));
 
-  return c.json(ordersList);
+  const groupedOrders = userOrders.reduce(
+    (acc: Record<string | number, any>, order) => {
+      const { orderId, items } = order;
+      if (!acc[orderId]) {
+        acc[orderId] = {
+          orderId,
+          items: [],
+        };
+      }
+      acc[orderId].items.push(items);
+      return acc;
+    },
+    {}
+  );
+  return c.json(groupedOrders);
 };
 
 // Restock books
 export const restockBooks = async (c: Context) => {
+  const body = await c.req.text();
+  if (!body) {
+    return c.json({ error: "Invalid input" }, 400);
+  }
   const { bookId, quantity }: { bookId: string; quantity: number } =
     await c.req.json();
-  const adminUsername = c.req.header("x-admin-username");
-  const adminPassword = c.req.header("x-admin-password");
-
-  if (
-    adminUsername !== "UncleBob1337" ||
-    adminPassword !== "TomCruiseIsUnder170cm"
-  ) {
-    return c.json({ error: "Unauthorized admin credentials" }, 403);
-  }
 
   const bookList = await db
     .select()
@@ -130,12 +142,15 @@ export const restockBooks = async (c: Context) => {
     return c.json({ error: `Cannot restock book with ID ${bookId}` }, 400);
   }
 
-  await db
-    .update(books)
-    .set({ stock: book.stock + quantity })
-    .where(eq(books.id, bookId));
+  const isMUltipleOf10 = quantity % 10 === 0;
+  if (!isMUltipleOf10) {
+    return c.json({ error: "Quantity must be a multiple of 10" }, 400);
+  }
+
+  const newStock = Number(book.stock) + Number(quantity);
+  await db.update(books).set({ stock: newStock }).where(eq(books.id, bookId));
   return c.json({
     message: `${book.title} restocked by ${quantity}`,
-    newStock: book.stock + quantity,
+    newStock: newStock,
   });
 };

@@ -3,7 +3,6 @@ import { Context } from "hono";
 
 export const authMiddleware = async (c: Context, next: () => any) => {
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  console.log(session);
   if (!session) {
     return c.json({ error: "Unauthorized" }, 401);
   }
@@ -14,7 +13,14 @@ export const authMiddleware = async (c: Context, next: () => any) => {
 };
 
 export const isAdmin = async (c: Context, next: () => any) => {
-  if (!c.get("user") || c.get("user")?.email !== "UncleBob1337") {
+  const authHeader = (c.req.header("Authorization") ?? "").split(" ")[1];
+  if (!authHeader) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  const s = atob(authHeader);
+  const [username, password] = s.split(":");
+
+  if (username !== "UncleBob1337" || password !== "TomCruiseIsUnder170cm") {
     return c.json({ error: "Unauthorized admin credentials" }, 403);
   }
   return next();
