@@ -7,10 +7,9 @@ import { BookCard } from "./components/book-card";
 import { DetailsDialog } from "./components/details-dialog";
 
 function App() {
-  const [searchString] = useState<string>("Programming");
   const [selectedBook, setSelectedBook] = useState<VolumeItems | null>(null);
   const [open, setOpen] = useState<boolean>(false);
-  const { data, isLoading, fetchNextPage } = useGetVolumes(searchString);
+  const { data, isLoading, fetchNextPage } = useGetVolumes("Programming");
 
   const books = data?.pages?.flatMap((page) => page.items) ?? [];
   return (
@@ -24,7 +23,7 @@ function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {books.map((book, index) => (
                   <BookCard
-                    key={book.id + index}
+                    key={`book-${index}-${book.id}`}
                     book={book}
                     openModal={() => {
                       setSelectedBook(book);

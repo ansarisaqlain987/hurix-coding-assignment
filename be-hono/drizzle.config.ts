@@ -3,8 +3,6 @@ import { config } from "dotenv";
 
 config({ path: "./.env" });
 
-console.log(process.env.DB_HOST);
-
 export default defineConfig({
   schema: "./src/db/schema.ts",
   out: "./src/db/migrations",

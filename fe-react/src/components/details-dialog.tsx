@@ -17,7 +17,6 @@ interface Props {
 }
 
 export const DetailsDialog = ({ open, setOpen, selectedBook }: Props) => {
-  console.log(selectedBook);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
@@ -30,6 +29,7 @@ export const DetailsDialog = ({ open, setOpen, selectedBook }: Props) => {
                 className="transition-transform duration-300 hover:scale-105"
                 height={200}
                 width={180}
+                loading="lazy"
               />
             </div>
           </DialogTitle>
