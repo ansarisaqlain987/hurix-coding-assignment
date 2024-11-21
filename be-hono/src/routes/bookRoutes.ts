@@ -1,37 +1,39 @@
-import { Hono } from "hono";
+import { Hono } from 'hono';
+
 import {
   listBooks,
   placeOrder,
   restockBooks,
   getOrders,
-} from "../controllers/bookController";
+} from '../controllers/bookController';
+
+import { OrderInput, RestockInput } from '@/lib/zod';
 import {
   authMiddleware,
   isAdmin,
   validateRequestBody,
-} from "@/middlewares/middleware";
-import { OrderInput, RestockInput } from "@/lib/zod";
+} from '@/middlewares/middleware';
 
 const routes = new Hono();
 
-routes.all("/", async (c) => {
+routes.all('/', async (c) => {
   return c.text(
-    "Hurix Assignment Backend with Hono, Typescript and Drizzle ORM"
+    'Hurix Assignment Backend with Hono, Typescript and Drizzle ORM',
   );
 });
-routes.get("/books", listBooks);
+routes.get('/books', listBooks);
 routes.post(
-  "/order",
+  '/order',
   authMiddleware,
   validateRequestBody(OrderInput),
-  placeOrder
+  placeOrder,
 );
-routes.get("/order", authMiddleware, getOrders);
+routes.get('/order', authMiddleware, getOrders);
 routes.post(
-  "/admin/restock",
+  '/admin/restock',
   isAdmin,
   validateRequestBody(RestockInput),
-  restockBooks
+  restockBooks,
 );
 
 export default routes;

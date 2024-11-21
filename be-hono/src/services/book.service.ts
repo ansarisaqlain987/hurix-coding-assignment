@@ -1,6 +1,7 @@
-import { db } from "@/db";
-import { books } from "@/db/schema";
-import { eq, SQL } from "drizzle-orm";
+import { eq, SQL } from 'drizzle-orm';
+
+import { db } from '@/db';
+import { books } from '@/db/schema';
 
 export const getBooks = ({ id }: { id?: string } = {}) => {
   if (id) {
@@ -17,7 +18,7 @@ export const updateBooks = (
     stock?: number | SQL<unknown> | undefined;
     limited?: boolean | SQL<unknown> | null | undefined;
   },
-  id: string
+  id: string,
 ) => {
   return db.update(books).set(setCondition).where(eq(books.id, id));
 };

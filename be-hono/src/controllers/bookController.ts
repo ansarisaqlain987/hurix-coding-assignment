@@ -1,17 +1,19 @@
-import { Context } from "hono";
-import { getBooks, updateBooks } from "@/services/book.service";
+import { Context } from 'hono';
+
+import { logger } from '@/lib/logger';
+import { Messages } from '@/lib/messages';
+import { getBooks, updateBooks } from '@/services/book.service';
 import {
   getOrdersByUserId,
   insertItems,
   insertOrder,
-} from "@/services/order.service";
-import { Messages } from "@/lib/messages";
-import { logger } from "@/lib/logger";
+} from '@/services/order.service';
 
 export const listBooks = async (c: Context) => {
   try {
     const allBooks = await getBooks();
     return c.json(allBooks);
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   } catch (e: Error | any) {
     logger.error(e);
     return c.json({ error: e.message ?? Messages.INTERNAL_SERVER_ERROR }, 500);
@@ -21,7 +23,7 @@ export const listBooks = async (c: Context) => {
 export const placeOrder = async (c: Context) => {
   try {
     const body: { items: { bookId: string; quantity: number }[] } = c.req.valid(
-      "json" as never
+      'json' as never,
     );
 
     if (!body || !body.items || body.items.length === 0) {
@@ -51,8 +53,8 @@ export const placeOrder = async (c: Context) => {
       }
       if (totalPrice + book.price * quantity > 120) {
         return c.json(
-          { error: "Order exceeds maximum purchase limit of $120" },
-          400
+          { error: 'Order exceeds maximum purchase limit of $120' },
+          400,
         );
       }
       totalPrice += book.price * quantity;
@@ -66,27 +68,28 @@ export const placeOrder = async (c: Context) => {
 
     if (totalPrice > 120) {
       return c.json(
-        { error: "Order exceeds maximum purchase limit of $120" },
-        400
+        { error: 'Order exceeds maximum purchase limit of $120' },
+        400,
       );
     }
 
     const currentOrder = await insertOrder({
-      userId: c.get("user")?.id,
+      userId: c.get('user')?.id,
     });
     const orderId = currentOrder[0].id;
     await insertItems(
       orderPayload.map((item) => ({
         orderId,
         ...item,
-      }))
+      })),
     );
     for (const { bookId, quantity } of items) {
       await updateBooks({ stock: stock - quantity }, bookId);
     }
 
-    logger.info("Order placed successfully");
+    logger.info('Order placed successfully');
     return c.json({ items, totalPrice });
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   } catch (e: Error | any) {
     logger.error(e);
     return c.json({ error: e.message ?? Messages.INTERNAL_SERVER_ERROR }, 500);
@@ -95,10 +98,24 @@ export const placeOrder = async (c: Context) => {
 
 export const getOrders = async (c: Context) => {
   try {
-    const userOrders = await getOrdersByUserId(c.get("user")?.id);
+    const userOrders = await getOrdersByUserId(c.get('user')?.id);
 
     const groupedOrders = userOrders.reduce(
-      (acc: Record<string | number, any>, order) => {
+      (
+        acc: Record<
+          string | number,
+          {
+            orderId: number;
+            items: {
+              bookId: string | null;
+              bookTitle: string | null;
+              quantity: number | null;
+              price: number | null;
+            }[];
+          }
+        >,
+        order,
+      ) => {
         const { orderId, items } = order;
         if (!acc[orderId]) {
           acc[orderId] = {
@@ -109,9 +126,10 @@ export const getOrders = async (c: Context) => {
         acc[orderId].items.push(items);
         return acc;
       },
-      {}
+      {},
     );
     return c.json(groupedOrders);
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   } catch (e: Error | any) {
     return c.json({ error: e.message ?? Messages.INTERNAL_SERVER_ERROR }, 500);
   }
@@ -120,7 +138,7 @@ export const getOrders = async (c: Context) => {
 export const restockBooks = async (c: Context) => {
   try {
     const { bookId, quantity }: { bookId: string; quantity: number } =
-      c.req.valid("json" as never);
+      c.req.valid('json' as never);
 
     const bookList = await getBooks({ id: bookId });
     if (bookList.length === 0) {
@@ -133,7 +151,7 @@ export const restockBooks = async (c: Context) => {
 
     const isMUltipleOf10 = quantity % 10 === 0;
     if (!isMUltipleOf10) {
-      return c.json({ error: "Quantity must be a multiple of 10" }, 400);
+      return c.json({ error: 'Quantity must be a multiple of 10' }, 400);
     }
 
     const newStock = Number(book.stock) + Number(quantity);
@@ -145,6 +163,7 @@ export const restockBooks = async (c: Context) => {
       message: msg,
       newStock: newStock,
     });
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   } catch (e: Error | any) {
     logger.error(e);
     return c.json({ error: e.message ?? Messages.INTERNAL_SERVER_ERROR }, 500);

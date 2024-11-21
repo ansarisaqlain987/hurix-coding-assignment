@@ -1,6 +1,8 @@
-import { db } from "@/db";
-import { books, orderItems, orders } from "@/db/schema";
-import { SQL, Placeholder, eq } from "drizzle-orm";
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+import { SQL, Placeholder, eq } from 'drizzle-orm';
+
+import { db } from '@/db';
+import { books, orderItems, orders } from '@/db/schema';
 
 export const insertOrder = (values: {
   userId: string | SQL<unknown> | Placeholder<string, any>;
@@ -15,7 +17,7 @@ export const insertItems = (
     bookId: string | SQL<unknown> | Placeholder<string, any>;
     price: number | SQL<unknown> | Placeholder<string, any>;
     quantity: number | SQL<unknown> | Placeholder<string, any>;
-  }[]
+  }[],
 ) => {
   return db.insert(orderItems).values(values).returning();
 };
