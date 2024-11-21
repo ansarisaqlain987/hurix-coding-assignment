@@ -4,13 +4,21 @@ import dotenv from "dotenv";
 import routes from "./routes/bookRoutes";
 import { auth } from "./lib/auth";
 import { trimTrailingSlash } from "hono/trailing-slash";
+import { logger } from "hono/logger";
+import { requestId } from "hono/request-id";
+import { cors } from "hono/cors";
+import { csrf } from "hono/csrf";
 
 dotenv.config();
 
 const app = new Hono({ strict: true });
 const port = 3000;
 
+app.use(csrf());
 app.use(trimTrailingSlash());
+app.use("*", requestId());
+app.use("/api/*", cors());
+app.use(logger());
 app.all("/", async (c) => {
   return c.text(
     "Hurix Assignment Backend with Hono, Typescript and Drizzle ORM"

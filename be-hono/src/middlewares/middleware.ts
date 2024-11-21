@@ -3,7 +3,8 @@ import { type ENV } from "@/lib/env";
 import { Messages } from "@/lib/messages";
 import { Context } from "hono";
 import { env } from "hono/adapter";
-
+import { zValidator } from "@hono/zod-validator";
+import { ZodType } from "zod";
 export const authMiddleware = async (c: Context, next: () => any) => {
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
   if (!session) {
@@ -30,20 +31,10 @@ export const isAdmin = async (c: Context, next: () => any) => {
   return next();
 };
 
-export const validateBody = async (c: Context, next: () => any) => {
-  const body = await c.req.text();
-  if (!body) {
-    return c.json({ error: Messages.INVALID_INPUT }, 400);
-  }
-  return next();
-};
-
-export const validateRequestBody = () => {
-  return async (c: Context, next: () => any) => {
-    const body = await c.req.text();
-    if (!body) {
-      return c.json({ error: Messages.INVALID_INPUT }, 400);
+export const validateRequestBody = (schema: ZodType) => {
+  return zValidator("json", schema, (result, c: Context) => {
+    if (!result.success) {
+      return c.json({ error: result.error }, 400);
     }
-    return next();
-  };
+  });
 };

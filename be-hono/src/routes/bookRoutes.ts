@@ -10,6 +10,7 @@ import {
   isAdmin,
   validateRequestBody,
 } from "@/middlewares/middleware";
+import { OrderInput, RestockInput } from "@/lib/zod";
 
 const routes = new Hono();
 
@@ -19,8 +20,18 @@ routes.all("/", async (c) => {
   );
 });
 routes.get("/books", listBooks);
-routes.post("/order", authMiddleware, validateRequestBody(), placeOrder);
+routes.post(
+  "/order",
+  authMiddleware,
+  validateRequestBody(OrderInput),
+  placeOrder
+);
 routes.get("/order", authMiddleware, getOrders);
-routes.post("/admin/restock", isAdmin, validateRequestBody(), restockBooks);
+routes.post(
+  "/admin/restock",
+  isAdmin,
+  validateRequestBody(RestockInput),
+  restockBooks
+);
 
 export default routes;
